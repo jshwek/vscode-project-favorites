@@ -122,11 +122,6 @@
         "icon": "$(collapse-all)"
       },
       {
-        "command": "projectFavorites.expandAll",
-        "title": "Expand All",
-        "icon": "$(expand-all)"
-      },
-      {
         "command": "projectFavorites.createSubgroup",
         "title": "Create Subgroup",
         "category": "Project Favorites",
@@ -143,6 +138,18 @@
         "title": "Import Groups",
         "category": "Project Favorites",
         "icon": "$(import)"
+      },
+      {
+        "command": "projectFavorites.moveGroupUp",
+        "title": "Move Group Up",
+        "category": "Project Favorites",
+        "icon": "$(chevron-up)"
+      },
+      {
+        "command": "projectFavorites.moveGroupDown",
+        "title": "Move Group Down",
+        "category": "Project Favorites",
+        "icon": "$(chevron-down)"
       }
     ],
     "keybindings": [
@@ -204,11 +211,6 @@
           "group": "navigation@2"
         },
         {
-          "command": "projectFavorites.expandAll",
-          "when": "view == projectFavoritesView",
-          "group": "navigation@3"
-        },
-        {
           "command": "projectFavorites.importGroups",
           "when": "view == projectFavoritesView",
           "group": "3_import_export@1"
@@ -241,19 +243,29 @@
           "group": "3_danger@1"
         },
         {
+          "command": "projectFavorites.moveGroupUp",
+          "when": "view == projectFavoritesView && viewItem =~ /group-middle|group-last/",
+          "group": "inline@1"
+        },
+        {
+          "command": "projectFavorites.moveGroupDown",
+          "when": "view == projectFavoritesView && viewItem =~ /group-first|group-middle/",
+          "group": "inline@2"
+        },
+        {
           "command": "projectFavorites.renameGroup",
           "when": "view == projectFavoritesView && viewItem =~ /group/",
-          "group": "inline@1"
+          "group": "inline@3"
         },
         {
           "command": "projectFavorites.openAllFiles",
           "when": "view == projectFavoritesView && viewItem =~ /group/",
-          "group": "inline@2"
+          "group": "inline@4"
         },
         {
           "command": "projectFavorites.deleteGroup",
           "when": "view == projectFavoritesView && viewItem =~ /group/",
-          "group": "inline@3"
+          "group": "inline@5"
         },
         {
           "command": "projectFavorites.removeFile",

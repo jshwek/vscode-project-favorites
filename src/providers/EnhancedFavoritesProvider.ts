@@ -50,7 +50,17 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
 
     private getGroups(): TreeNode[] {
         const groups = this.storageService.getAllGroups();
-        return this.sortAndMapGroups(groups, 'group');
+        const nodes = this.sortAndMapGroups(groups, 'group');
+
+        // Add position information for each node
+        nodes.forEach((node, index) => {
+            if (node.group) {
+                node.group.position = index;
+                node.group.totalCount = nodes.length;
+            }
+        });
+
+        return nodes;
     }
 
     private sortAndMapGroups(groups: ProjectGroup[], nodeType: 'group' | 'subgroup'): TreeNode[] {
@@ -183,7 +193,24 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
             group.isExpanded !== false ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed
         );
 
-        item.contextValue = group.parentId ? 'subgroup' : 'group';
+        // Set context value with position info for top-level groups
+        if (group.parentId) {
+            item.contextValue = 'subgroup';
+        } else {
+            const position = (group as any).position;
+            const totalCount = (group as any).totalCount;
+
+            if (totalCount === 1) {
+                item.contextValue = 'group group-only';
+            } else if (position === 0) {
+                item.contextValue = 'group group-first';
+            } else if (position === totalCount - 1) {
+                item.contextValue = 'group group-last';
+            } else {
+                item.contextValue = 'group group-middle';
+            }
+        }
+
         item.iconPath = new vscode.ThemeIcon(
             'folder-library',
             new vscode.ThemeColor(group.color || 'charts.foreground')

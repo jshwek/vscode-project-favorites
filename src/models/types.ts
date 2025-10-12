@@ -28,6 +28,8 @@ export interface ProjectGroup {
     description?: string;  // Optional description for the group
     sortIndex?: number;    // For manual ordering
     isExpanded?: boolean;  // Whether the group is expanded in the tree
+    position?: number;     // Runtime position in the list (not persisted)
+    totalCount?: number;   // Runtime total count (not persisted)
 }
 
 export interface FavoritesData {

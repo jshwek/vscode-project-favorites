@@ -337,21 +337,79 @@ export function registerEnhancedCommands(
         () => provider.refresh()
     );
 
-    // Expand all
-    const expandAll = vscode.commands.registerCommand(
-        'projectFavorites.expandAll',
-        () => {
-            const groups = storageService.getAllGroups();
-            expandAllGroupsRecursive(groups, storageService);
-            provider.refresh();
-        }
-    );
-
     // Collapse all
     const collapseAll = vscode.commands.registerCommand(
         'projectFavorites.collapseAll',
         () => {
             vscode.commands.executeCommand('workbench.actions.treeView.projectFavoritesView.collapseAll');
+        }
+    );
+
+    // Move group up
+    const moveGroupUp = vscode.commands.registerCommand(
+        'projectFavorites.moveGroupUp',
+        async (node: TreeNode) => {
+            if (!node.group) return;
+
+            // Only allow moving top-level groups
+            if (node.group.parentId) {
+                vscode.window.showInformationMessage('Only top-level groups can be reordered');
+                return;
+            }
+
+            const groups = storageService.getAllGroups();
+            const currentIndex = groups.findIndex(g => g.id === node.group!.id);
+
+            if (currentIndex <= 0) {
+                vscode.window.showInformationMessage('Group is already at the top');
+                return;
+            }
+
+            // Check if sort order is custom, if not, switch to custom
+            const config = vscode.workspace.getConfiguration('projectFavorites');
+            const currentSort = config.get<string>('sortOrder', 'dateCreated');
+
+            if (currentSort !== 'custom') {
+                await config.update('sortOrder', 'custom', vscode.ConfigurationTarget.Workspace);
+                vscode.window.showInformationMessage('Sort order changed to "custom" to allow manual reordering');
+            }
+
+            storageService.reorderGroups(node.group.id, currentIndex - 1);
+            provider.refresh();
+        }
+    );
+
+    // Move group down
+    const moveGroupDown = vscode.commands.registerCommand(
+        'projectFavorites.moveGroupDown',
+        async (node: TreeNode) => {
+            if (!node.group) return;
+
+            // Only allow moving top-level groups
+            if (node.group.parentId) {
+                vscode.window.showInformationMessage('Only top-level groups can be reordered');
+                return;
+            }
+
+            const groups = storageService.getAllGroups();
+            const currentIndex = groups.findIndex(g => g.id === node.group!.id);
+
+            if (currentIndex === -1 || currentIndex >= groups.length - 1) {
+                vscode.window.showInformationMessage('Group is already at the bottom');
+                return;
+            }
+
+            // Check if sort order is custom, if not, switch to custom
+            const config = vscode.workspace.getConfiguration('projectFavorites');
+            const currentSort = config.get<string>('sortOrder', 'dateCreated');
+
+            if (currentSort !== 'custom') {
+                await config.update('sortOrder', 'custom', vscode.ConfigurationTarget.Workspace);
+                vscode.window.showInformationMessage('Sort order changed to "custom" to allow manual reordering');
+            }
+
+            storageService.reorderGroups(node.group.id, currentIndex + 1);
+            provider.refresh();
         }
     );
 
@@ -372,8 +430,9 @@ export function registerEnhancedCommands(
         importGroups,
         revealInExplorer,
         refresh,
-        expandAll,
-        collapseAll
+        collapseAll,
+        moveGroupUp,
+        moveGroupDown
     );
 }
 
@@ -554,30 +613,4 @@ async function getFilesInFolder(folderPath: string): Promise<string[]> {
     }
 
     return files;
-}
-
-function expandAllGroupsRecursive(groups: any[], storageService: StorageService): void {
-    for (const group of groups) {
-        // Expand the group itself
-        storageService.updateGroup(group.id, { isExpanded: true });
-
-        // Get fresh group data after update
-        const updatedGroup = storageService.getGroup(group.id);
-        if (!updatedGroup) continue;
-
-        // Expand all folders in the group
-        if (updatedGroup.folders && updatedGroup.folders.length > 0) {
-            for (const folder of updatedGroup.folders) {
-                folder.expanded = true;
-            }
-            // Save the updated group with expanded folders
-            storageService.updateGroup(updatedGroup.id, { folders: updatedGroup.folders });
-        }
-
-        // Recursively expand subgroups (get fresh data)
-        const freshGroup = storageService.getGroup(group.id);
-        if (freshGroup && freshGroup.subgroups && freshGroup.subgroups.length > 0) {
-            expandAllGroupsRecursive(freshGroup.subgroups, storageService);
-        }
-    }
 }

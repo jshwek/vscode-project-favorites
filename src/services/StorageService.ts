@@ -318,6 +318,25 @@ export class StorageService {
         return true;
     }
 
+    // Reorder top-level groups
+    reorderGroups(groupId: string, newIndex: number): boolean {
+        const oldIndex = this.data.groups.findIndex(g => g.id === groupId);
+        if (oldIndex === -1 || oldIndex === newIndex) {
+            return false;
+        }
+
+        const [movedGroup] = this.data.groups.splice(oldIndex, 1);
+        this.data.groups.splice(newIndex, 0, movedGroup);
+
+        // Update sort indices for all groups
+        this.data.groups.forEach((group, index) => {
+            group.sortIndex = index;
+        });
+
+        this.saveData();
+        return true;
+    }
+
     // Move item between groups
     moveItemBetweenGroups(
         sourceGroupId: string,

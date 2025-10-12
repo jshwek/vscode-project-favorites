@@ -149,7 +149,7 @@ Download the latest `.vsix` file from [Releases](https://github.com/jshwek/vscod
 
 Organize all files related to a feature in one place:
 
-```
+```filesystem
 📁 Sales Feature
   ├── 📁 Frontend
   │   ├── SalesPage.tsx
@@ -172,7 +172,7 @@ Organize all files related to a feature in one place:
 
 Working across multiple services?
 
-```
+```filesystem
 📁 User Service
   ├── user-service/src/index.ts
   ├── user-service/src/handlers.ts
@@ -188,7 +188,7 @@ Working across multiple services?
 
 Group all files related to a bug:
 
-```
+```filesystem
 📁 Bug #123: Login Issue
   ├── components/LoginForm.tsx
   ├── services/authService.ts
@@ -202,7 +202,7 @@ When done, delete the group or keep it for future reference.
 
 Keep important files accessible:
 
-```
+```filesystem
 📁 Project Setup
   ├── package.json
   ├── tsconfig.json
@@ -280,7 +280,52 @@ Use VS Code's Quick Open (`Ctrl+P`) in combination with groups for maximum produ
 
 ### 📦 Export/Import Groups
 
-Right-click in the Project Favorites view → **Export Groups** to save as JSON. Share with other projects!
+Transfer your group configurations between projects or share templates with your team.
+
+#### Exporting Groups
+
+1. Click the **Export** icon (📤) in the Project Favorites toolbar
+   - Or right-click in the Project Favorites view → **Export Groups**
+2. Choose where to save the JSON file (e.g., `my-favorites.json`)
+3. The exported file contains all your groups, subgroups, and file references
+
+**What's Exported:**
+
+```json
+{
+  "version": "1.0.0",
+  "groups": [
+    {
+      "id": "...",
+      "name": "My Feature",
+      "files": [...],
+      "folders": [...],
+      "subgroups": [...],
+      "description": "...",
+      "createdAt": 1234567890,
+      "updatedAt": 1234567890
+    }
+  ]
+}
+```
+
+#### Importing Groups
+
+1. Click the **Import** icon (📥) in the Project Favorites toolbar
+   - Or right-click in the Project Favorites view → **Import Groups**
+2. Select a previously exported JSON file
+3. Choose how to handle the import:
+   - **Merge with existing groups**: Keeps your current groups and adds new ones
+   - **Replace existing groups**: Removes all current groups and uses imported ones
+
+**Common Use Cases:**
+
+- 📋 **Template Sharing**: Export a standardized project structure for your team
+- 🔄 **Project Migration**: Move your favorite groups to a new project
+- 💾 **Backup**: Save your configuration before major changes
+- 🎯 **Feature Templates**: Create reusable group structures for common features
+
+> **Note:** Imported file paths are relative, so they work best when importing to projects with similar structures.
 
 ---
 
