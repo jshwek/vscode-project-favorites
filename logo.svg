@@ -1,0 +1,56 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffed4e;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGradient)"/>
+  
+  <!-- Folder icon -->
+  <g transform="translate(100, 110)">
+    <!-- Folder back -->
+    <path d="M -45 -25 L -45 20 Q -45 25 -40 25 L 40 25 Q 45 25 45 20 L 45 -20 Q 45 -25 40 -25 L -20 -25 L -28 -35 L -40 -35 Q -45 -35 -45 -30 Z" 
+          fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Folder front tab -->
+    <path d="M -45 -30 L -28 -35 L -20 -25 L -45 -25 Z" 
+          fill="#e0e0e0" opacity="0.9"/>
+    
+    <!-- Folder lines detail -->
+    <line x1="-35" y1="-5" x2="35" y2="-5" stroke="#667eea" stroke-width="2" opacity="0.3"/>
+    <line x1="-35" y1="5" x2="35" y2="5" stroke="#667eea" stroke-width="2" opacity="0.3"/>
+    <line x1="-35" y1="15" x2="20" y2="15" stroke="#667eea" stroke-width="2" opacity="0.3"/>
+  </g>
+  
+  <!-- Star icon (favorite) -->
+  <g transform="translate(135, 70)" filter="url(#glow)">
+    <path d="M 0 -20 L 5.88 -6.18 L 20.62 -6.18 L 9.51 2.94 L 14.69 16.18 L 0 6.18 L -14.69 16.18 L -9.51 2.94 L -20.62 -6.18 L -5.88 -6.18 Z" 
+          fill="url(#starGradient)" 
+          stroke="#ff9500" 
+          stroke-width="2"/>
+  </g>
+  
+  <!-- Sparkle elements -->
+  <g opacity="0.8">
+    <circle cx="70" cy="50" r="3" fill="#ffffff"/>
+    <circle cx="150" cy="140" r="2" fill="#ffffff"/>
+    <circle cx="50" cy="130" r="2.5" fill="#ffffff"/>
+  </g>
+</svg>

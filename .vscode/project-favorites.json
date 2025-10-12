@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "groups": [
+    {
+      "id": "c87dfc33-8e34-40da-8942-ccac02fa5f56",
+      "name": "expand-collapse",
+      "description": "",
+      "files": [
+        {
+          "id": "ce79281b-e588-451b-82e5-68c87f3c4fda",
+          "relativePath": "src\\commands\\enhanced.ts",
+          "addedAt": 1760130709948
+        }
+      ],
+      "folders": [],
+      "subgroups": [],
+      "createdAt": 1760130707391,
+      "updatedAt": 1760130915205,
+      "isExpanded": true
+    }
+  ]
+}

@@ -1,0 +1,341 @@
+{
+  "name": "project-favorites",
+  "displayName": "Project Favorites",
+  "description": "Organize and manage groups of related files across your project for better workflow",
+  "version": "0.0.1",
+  "publisher": "jshwek",
+  "icon": "logo-128.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jshwek/vscode-project-favorites.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jshwek/vscode-project-favorites/issues"
+  },
+  "homepage": "https://github.com/jshwek/vscode-project-favorites#readme",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "favorites",
+    "bookmarks",
+    "files",
+    "groups",
+    "projects",
+    "organization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "project-favorites",
+          "title": "Project Favorites",
+          "icon": "resources/activitybar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "project-favorites": [
+        {
+          "id": "projectFavoritesView",
+          "name": "Groups",
+          "icon": "resources/logo.svg",
+          "contextualTitle": "Project Favorites",
+          "dragAndDrop": true
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "projectFavorites.addToGroup",
+        "title": "Add to Project Group",
+        "category": "Project Favorites",
+        "icon": "$(add)"
+      },
+      {
+        "command": "projectFavorites.addToNewGroup",
+        "title": "Add to New Project Group",
+        "category": "Project Favorites",
+        "icon": "$(add)"
+      },
+      {
+        "command": "projectFavorites.addCurrentFileToGroup",
+        "title": "Add Current File to Group",
+        "category": "Project Favorites"
+      },
+      {
+        "command": "projectFavorites.addFolderToGroup",
+        "title": "Add Folder to Group",
+        "category": "Project Favorites",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "projectFavorites.createGroup",
+        "title": "Create New Group",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "projectFavorites.deleteGroup",
+        "title": "Delete Group",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "projectFavorites.renameGroup",
+        "title": "Rename Group",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "projectFavorites.removeFile",
+        "title": "Remove from Group",
+        "icon": "$(close)"
+      },
+      {
+        "command": "projectFavorites.openFile",
+        "title": "Open File"
+      },
+      {
+        "command": "projectFavorites.openAllFiles",
+        "title": "Open All Files in Group",
+        "icon": "$(files)"
+      },
+      {
+        "command": "projectFavorites.revealInExplorer",
+        "title": "Reveal in Explorer",
+        "icon": "$(file-symlink-directory)"
+      },
+      {
+        "command": "projectFavorites.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "projectFavorites.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "projectFavorites.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "projectFavorites.createSubgroup",
+        "title": "Create Subgroup",
+        "category": "Project Favorites",
+        "icon": "$(folder-library)"
+      },
+      {
+        "command": "projectFavorites.exportGroups",
+        "title": "Export Groups",
+        "category": "Project Favorites",
+        "icon": "$(export)"
+      },
+      {
+        "command": "projectFavorites.importGroups",
+        "title": "Import Groups",
+        "category": "Project Favorites",
+        "icon": "$(import)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "projectFavorites.addCurrentFileToGroup",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f",
+        "when": "editorFocus"
+      },
+      {
+        "command": "projectFavorites.openAllFiles",
+        "key": "ctrl+alt+o",
+        "mac": "cmd+alt+o",
+        "when": "focusedView == projectFavoritesView"
+      },
+      {
+        "command": "projectFavorites.createGroup",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "projectFavorites.addToGroup",
+          "when": "resourceScheme == file && !explorerResourceIsFolder",
+          "group": "2_workspace"
+        },
+        {
+          "command": "projectFavorites.addToNewGroup",
+          "when": "resourceScheme == file && !explorerResourceIsFolder",
+          "group": "2_workspace"
+        },
+        {
+          "command": "projectFavorites.addFolderToGroup",
+          "when": "explorerResourceIsFolder",
+          "group": "2_workspace"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "projectFavorites.addToGroup",
+          "group": "1_modification"
+        },
+        {
+          "command": "projectFavorites.addToNewGroup",
+          "group": "1_modification"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "projectFavorites.createGroup",
+          "when": "view == projectFavoritesView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "projectFavorites.refresh",
+          "when": "view == projectFavoritesView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "projectFavorites.expandAll",
+          "when": "view == projectFavoritesView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "projectFavorites.importGroups",
+          "when": "view == projectFavoritesView",
+          "group": "3_import_export@1"
+        },
+        {
+          "command": "projectFavorites.exportGroups",
+          "when": "view == projectFavoritesView",
+          "group": "3_import_export@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "projectFavorites.createSubgroup",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "projectFavorites.renameGroup",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "1_modification@2"
+        },
+        {
+          "command": "projectFavorites.openAllFiles",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "2_actions@1"
+        },
+        {
+          "command": "projectFavorites.deleteGroup",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "3_danger@1"
+        },
+        {
+          "command": "projectFavorites.renameGroup",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "inline@1"
+        },
+        {
+          "command": "projectFavorites.openAllFiles",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "inline@2"
+        },
+        {
+          "command": "projectFavorites.deleteGroup",
+          "when": "view == projectFavoritesView && viewItem =~ /group/",
+          "group": "inline@3"
+        },
+        {
+          "command": "projectFavorites.removeFile",
+          "when": "view == projectFavoritesView && viewItem == file",
+          "group": "inline"
+        },
+        {
+          "command": "projectFavorites.revealInExplorer",
+          "when": "view == projectFavoritesView && viewItem == file",
+          "group": "2_files"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Project Favorites",
+      "properties": {
+        "projectFavorites.storageLocation": {
+          "type": "string",
+          "default": "workspace",
+          "enum": [
+            "workspace",
+            "global"
+          ],
+          "description": "Where to store project favorites data"
+        },
+        "projectFavorites.confirmDelete": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show confirmation dialog when deleting groups"
+        },
+        "projectFavorites.sortOrder": {
+          "type": "string",
+          "default": "dateCreated",
+          "enum": [
+            "alphabetical",
+            "custom",
+            "recent",
+            "dateCreated"
+          ],
+          "description": "How to sort files within groups"
+        },
+        "projectFavorites.openAllFilesLimit": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Maximum number of files to open at once when using 'Open All Files'"
+        },
+        "projectFavorites.enableDragAndDrop": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable drag and drop to reorder items and move between groups"
+        },
+        "projectFavorites.showFileIcons": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show file type icons in the tree view"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/sinon": "^10.0.13",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "@vscode/test-electron": "^2.2.0",
+    "eslint": "^8.28.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.1.0",
+    "sinon": "^15.0.0",
+    "typescript": "^4.9.3"
+  }
+}
