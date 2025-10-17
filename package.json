@@ -98,6 +98,11 @@
         "icon": "$(close)"
       },
       {
+        "command": "projectFavorites.editFileLineNumber",
+        "title": "Edit Line Number",
+        "icon": "$(edit)"
+      },
+      {
         "command": "projectFavorites.openFile",
         "title": "Open File"
       },
@@ -266,6 +271,11 @@
           "command": "projectFavorites.deleteGroup",
           "when": "view == projectFavoritesView && viewItem =~ /group/",
           "group": "inline@5"
+        },
+        {
+          "command": "projectFavorites.editFileLineNumber",
+          "when": "view == projectFavoritesView && viewItem == file",
+          "group": "1_modification@1"
         },
         {
           "command": "projectFavorites.removeFile",

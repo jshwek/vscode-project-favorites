@@ -6,7 +6,8 @@
       "Bash(vsce package:*)",
       "Bash(npm install:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npx vsce package)"
+      "Bash(npx vsce package)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

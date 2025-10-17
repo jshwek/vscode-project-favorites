@@ -242,14 +242,16 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
             : file.relativePath;
 
         const fileName = file.label || path.basename(file.relativePath);
-        const item = new vscode.TreeItem(fileName, vscode.TreeItemCollapsibleState.None);
+        const lineNumber = file.lineNumber || 1;
+        const displayLabel = `${fileName}:${lineNumber}`;
+        const item = new vscode.TreeItem(displayLabel, vscode.TreeItemCollapsibleState.None);
 
         item.contextValue = 'file';
         item.resourceUri = vscode.Uri.file(absolutePath);
         item.command = {
-            command: 'vscode.open',
+            command: 'projectFavorites.openFile',
             title: 'Open File',
-            arguments: [vscode.Uri.file(absolutePath)]
+            arguments: [{ type: 'file', file, groupId }]
         };
 
         // Show file icons if enabled
@@ -262,6 +264,7 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
         item.tooltip = new vscode.MarkdownString();
         item.tooltip.appendMarkdown(`**${fileName}**\n\n`);
         item.tooltip.appendMarkdown(`Path: \`${file.relativePath}\`\n\n`);
+        item.tooltip.appendMarkdown(`Line: ${lineNumber}\n\n`);
         item.tooltip.appendMarkdown(`Added: ${new Date(file.addedAt).toLocaleString()}`);
 
         // Add description to show the relative path if different from filename

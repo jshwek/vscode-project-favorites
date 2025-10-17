@@ -79,6 +79,7 @@ suite('StorageService Test Suite', () => {
         assert.strictEqual(updatedGroup?.files.length, 1);
         assert.strictEqual(updatedGroup?.files[0].relativePath, 'src/test.ts');
         assert.strictEqual(updatedGroup?.files[0].label, 'Test File');
+        assert.strictEqual(updatedGroup?.files[0].lineNumber, 1); // Default line number
     });
 
     test('Add duplicate file to group should fail', () => {
@@ -249,5 +250,95 @@ suite('StorageService Test Suite', () => {
         assert.ok(groups.some(g => g.id === group1.id));
         assert.ok(groups.some(g => g.id === group2.id));
         assert.ok(!groups.some(g => g.id === group3.id));
+    });
+
+    test('Update file line number', () => {
+        const group = storageService.createGroup('Test Group');
+        storageService.addFileToGroup(group.id, 'src/test.ts');
+
+        const file = storageService.getGroup(group.id)?.files[0];
+        assert.strictEqual(file?.lineNumber, 1); // Default
+
+        const success = storageService.updateFileLineNumber(group.id, file!.id, 42);
+        assert.strictEqual(success, true);
+
+        const updatedFile = storageService.getGroup(group.id)?.files[0];
+        assert.strictEqual(updatedFile?.lineNumber, 42);
+    });
+
+    test('Update file line number in nonexistent group should fail', () => {
+        const success = storageService.updateFileLineNumber('fake-id', 'fake-file-id', 10);
+        assert.strictEqual(success, false);
+    });
+
+    test('Update file line number for nonexistent file should fail', () => {
+        const group = storageService.createGroup('Test Group');
+        const success = storageService.updateFileLineNumber(group.id, 'fake-file-id', 10);
+        assert.strictEqual(success, false);
+    });
+
+    test('Update subgroup name', () => {
+        const parentGroup = storageService.createGroup('Parent Group');
+        const subgroup = storageService.createGroup('Original Subgroup', 'Description', parentGroup.id);
+
+        const success = storageService.updateGroup(subgroup.id, {
+            name: 'Updated Subgroup',
+            description: 'Updated description'
+        });
+
+        assert.strictEqual(success, true);
+
+        const updatedSubgroup = storageService.getGroup(subgroup.id);
+        assert.strictEqual(updatedSubgroup?.name, 'Updated Subgroup');
+        assert.strictEqual(updatedSubgroup?.description, 'Updated description');
+        assert.strictEqual(updatedSubgroup?.parentId, parentGroup.id);
+    });
+
+    test('Delete subgroup', () => {
+        const parentGroup = storageService.createGroup('Parent Group');
+        const subgroup = storageService.createGroup('Subgroup', 'Description', parentGroup.id);
+
+        const success = storageService.deleteGroup(subgroup.id);
+        assert.strictEqual(success, true);
+
+        const deletedSubgroup = storageService.getGroup(subgroup.id);
+        assert.strictEqual(deletedSubgroup, undefined);
+
+        // Parent should still exist
+        const parent = storageService.getGroup(parentGroup.id);
+        assert.ok(parent);
+        assert.strictEqual(parent.subgroups?.length, 0);
+    });
+
+    test('Update deeply nested subgroup', () => {
+        const level1 = storageService.createGroup('Level 1');
+        const level2 = storageService.createGroup('Level 2', '', level1.id);
+        const level3 = storageService.createGroup('Level 3', '', level2.id);
+
+        const success = storageService.updateGroup(level3.id, {
+            name: 'Updated Level 3'
+        });
+
+        assert.strictEqual(success, true);
+
+        const updatedLevel3 = storageService.getGroup(level3.id);
+        assert.strictEqual(updatedLevel3?.name, 'Updated Level 3');
+    });
+
+    test('Delete deeply nested subgroup', () => {
+        const level1 = storageService.createGroup('Level 1');
+        const level2 = storageService.createGroup('Level 2', '', level1.id);
+        const level3 = storageService.createGroup('Level 3', '', level2.id);
+
+        const success = storageService.deleteGroup(level3.id);
+        assert.strictEqual(success, true);
+
+        const deletedLevel3 = storageService.getGroup(level3.id);
+        assert.strictEqual(deletedLevel3, undefined);
+
+        // Level 2 should still exist
+        const level2Check = storageService.getGroup(level2.id);
+        assert.ok(level2Check);
+        assert.strictEqual(level2Check.subgroups?.length, 0);
     });
 });

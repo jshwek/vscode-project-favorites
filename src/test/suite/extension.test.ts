@@ -5,11 +5,11 @@ suite('Extension Test Suite', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('project-favorites'));
+        assert.ok(vscode.extensions.getExtension('jshwek.project-favorites'));
     });
 
     test('Should activate', async () => {
-        const ext = vscode.extensions.getExtension('project-favorites');
+        const ext = vscode.extensions.getExtension('jshwek.project-favorites');
         if (ext) {
             await ext.activate();
             assert.ok(ext.isActive);
@@ -50,7 +50,7 @@ suite('Extension Test Suite', () => {
 
     test('Should have Project Favorites view', () => {
         // Check if the tree view exists
-        const extension = vscode.extensions.getExtension('project-favorites');
+        const extension = vscode.extensions.getExtension('jshwek.project-favorites');
         if (extension && extension.packageJSON) {
             const contributes = extension.packageJSON.contributes;
             assert.ok(contributes);

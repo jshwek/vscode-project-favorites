@@ -4,6 +4,7 @@ export interface FileItem {
     label?: string;        // Optional custom label for display
     addedAt: number;       // Timestamp when added
     sortIndex?: number;    // For manual ordering
+    lineNumber?: number;   // Optional line number to jump to when opening
 }
 
 export interface FolderItem {

@@ -212,10 +212,28 @@ export class StorageService {
             id: uuidv4(),
             relativePath,
             label,
-            addedAt: Date.now()
+            addedAt: Date.now(),
+            lineNumber: 1
         };
 
         group.files.push(newFile);
+        group.updatedAt = Date.now();
+        this.saveData();
+        return true;
+    }
+
+    updateFileLineNumber(groupId: string, fileId: string, lineNumber: number): boolean {
+        const group = this.getGroup(groupId);
+        if (!group) {
+            return false;
+        }
+
+        const file = group.files.find(f => f.id === fileId);
+        if (!file) {
+            return false;
+        }
+
+        file.lineNumber = lineNumber;
         group.updatedAt = Date.now();
         this.saveData();
         return true;

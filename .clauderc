@@ -1,0 +1,84 @@
+# Claude Code Configuration for vscode-project-favorites
+
+## Code Modification Policy
+
+### CRITICAL: Always Clean Up Previous Attempts
+
+When the user requests a different approach or changes direction:
+
+1. **REMOVE the old implementation completely** before writing new code
+2. **DO NOT comment out** old code - delete it entirely
+3. **DO NOT leave both approaches** in the file
+4. **ASK before keeping** any part of the previous implementation
+
+### Example Workflow
+
+**Bad:**
+
+```typescript
+// Old approach (commented out)
+// function oldWay() { ... }
+
+// New approach
+function newWay() { ... }
+```
+
+**Good:**
+
+```typescript
+// Only the new approach exists
+function newWay() { ... }
+```
+
+### When User Says "Let's try a different approach"
+
+1. Read the current file
+2. Identify all code from previous attempt
+3. Remove it completely
+4. Write the new implementation
+5. Mention what was removed in your response
+
+## Feature Development Checklist
+
+When adding or modifying features, ALWAYS update:
+
+- [ ] Tests in `src/test/suite/*.test.ts`
+- [ ] `ARCHITECTURE.md` with code locations and examples
+- [ ] `CLAUDE.md` with patterns and workflows
+- [ ] `package.json` if adding commands, menus, or settings
+- [ ] Run `npm run compile` to verify no errors
+- [ ] Run `npm test` to verify all tests pass
+
+## Project-Specific Patterns
+
+### Subgroup Operations
+
+Always use `findGroupRecursive()` for operations that may involve subgroups.
+See CLAUDE.md "Important Patterns" section.
+
+### String Literals for Config
+
+Use string literals, not enums, when reading VS Code configuration.
+See CLAUDE.md "Sort Order" pattern.
+
+### Relative Paths
+
+Always convert absolute paths to relative paths using:
+
+```typescript
+const relativePath = path.relative(workspaceFolder.uri.fsPath, absolutePath);
+```
+
+## File Modification Rules
+
+1. **Read First**: Always read a file before editing
+2. **Single Source of Truth**: One implementation approach per feature
+3. **Delete Dead Code**: Remove failed attempts completely
+4. **No Commented Code**: Unless it's documentation
+5. **Verify After Changes**: Run compile and tests
+
+## When in Doubt
+
+- Ask the user if you should keep any previous code
+- Explicitly state what you're removing
+- If unsure about deletion, ask before proceeding

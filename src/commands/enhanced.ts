@@ -188,6 +188,34 @@ export function registerEnhancedCommands(
         }
     );
 
+    // Edit file line number
+    const editFileLineNumber = vscode.commands.registerCommand(
+        'projectFavorites.editFileLineNumber',
+        async (node: TreeNode) => {
+            if (!node.file || !node.groupId) return;
+
+            const currentLine = node.file.lineNumber || 1;
+            const input = await vscode.window.showInputBox({
+                prompt: 'Enter line number to jump to when opening this file',
+                value: currentLine.toString(),
+                validateInput: (value) => {
+                    const num = parseInt(value);
+                    if (isNaN(num) || num < 1) {
+                        return 'Please enter a valid line number (must be >= 1)';
+                    }
+                    return undefined;
+                }
+            });
+
+            if (input) {
+                const lineNumber = parseInt(input);
+                storageService.updateFileLineNumber(node.groupId, node.file.id, lineNumber);
+                provider.refresh();
+                vscode.window.showInformationMessage(`Line number set to ${lineNumber}`);
+            }
+        }
+    );
+
     // Open file
     const openFile = vscode.commands.registerCommand(
         'projectFavorites.openFile',
@@ -199,7 +227,13 @@ export function registerEnhancedCommands(
                 const absolutePath = path.join(workspaceFolder.uri.fsPath, node.file.relativePath);
                 try {
                     const document = await vscode.workspace.openTextDocument(absolutePath);
-                    await vscode.window.showTextDocument(document);
+                    const lineNumber = node.file.lineNumber || 1;
+                    const position = new vscode.Position(lineNumber - 1, 0);
+                    const selection = new vscode.Range(position, position);
+
+                    await vscode.window.showTextDocument(document, {
+                        selection: selection
+                    });
                 } catch (error) {
                     vscode.window.showErrorMessage(`Failed to open file: ${node.file.relativePath}`);
                 }
@@ -424,6 +458,7 @@ export function registerEnhancedCommands(
         deleteGroup,
         renameGroup,
         removeFile,
+        editFileLineNumber,
         openFile,
         openAllFiles,
         exportGroups,
