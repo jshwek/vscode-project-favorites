@@ -4,7 +4,9 @@
       "Bash(mkdir:*)",
       "Bash(npm run compile:*)",
       "Bash(vsce package:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx vsce package)"
     ],
     "deny": [],
     "ask": []

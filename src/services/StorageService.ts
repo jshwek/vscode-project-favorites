@@ -147,30 +147,52 @@ export class StorageService {
     }
 
     updateGroup(groupId: string, updates: Partial<ProjectGroup>): boolean {
-        const groupIndex = this.data.groups.findIndex(g => g.id === groupId);
-        if (groupIndex === -1) {
+        const group = this.findGroupRecursive(groupId);
+        if (!group) {
             return false;
         }
 
-        this.data.groups[groupIndex] = {
-            ...this.data.groups[groupIndex],
-            ...updates,
-            updatedAt: Date.now()
-        };
+        // Update the group object directly (since findGroupRecursive returns a reference)
+        Object.assign(group, updates);
+        group.updatedAt = Date.now();
 
         this.saveData();
         return true;
     }
 
     deleteGroup(groupId: string): boolean {
+        // Try to delete from top-level groups first
         const groupIndex = this.data.groups.findIndex(g => g.id === groupId);
-        if (groupIndex === -1) {
-            return false;
+        if (groupIndex !== -1) {
+            this.data.groups.splice(groupIndex, 1);
+            this.saveData();
+            return true;
         }
 
-        this.data.groups.splice(groupIndex, 1);
-        this.saveData();
-        return true;
+        // If not found at top level, search for subgroup
+        const deleted = this.deleteSubgroupRecursive(groupId, this.data.groups);
+        if (deleted) {
+            this.saveData();
+        }
+        return deleted;
+    }
+
+    private deleteSubgroupRecursive(groupId: string, groups: ProjectGroup[]): boolean {
+        for (const group of groups) {
+            if (group.subgroups && group.subgroups.length > 0) {
+                const subgroupIndex = group.subgroups.findIndex(sg => sg.id === groupId);
+                if (subgroupIndex !== -1) {
+                    group.subgroups.splice(subgroupIndex, 1);
+                    group.updatedAt = Date.now();
+                    return true;
+                }
+                // Recursively search in nested subgroups
+                if (this.deleteSubgroupRecursive(groupId, group.subgroups)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // File management methods
