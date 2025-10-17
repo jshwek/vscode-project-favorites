@@ -7,6 +7,7 @@ All notable changes to the "Project Favorites" extension will be documented in t
 ### Initial Release
 
 #### Features
+
 - **Group Management**: Create and organize project groups
 - **File Organization**: Add files to groups using context menus
 - **Folder Support**: Add entire folders that expand to show contents
@@ -27,6 +28,7 @@ All notable changes to the "Project Favorites" extension will be documented in t
 - **Context Menus**: Available in Explorer, Editor tabs, and Tree view
 
 #### Configuration
+
 - `projectFavorites.storageLocation`: Choose workspace or global storage
 - `projectFavorites.sortOrder`: Control how items are sorted
 - `projectFavorites.openAllFilesLimit`: Limit files opened at once (1-50)
