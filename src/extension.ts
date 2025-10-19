@@ -20,6 +20,19 @@ export function activate(context: vscode.ExtensionContext) {
         dragAndDropController: favoritesProvider  // Enable drag and drop
     });
 
+    // Add listeners for expand/collapse events to persist state
+    context.subscriptions.push(
+        treeView.onDidExpandElement(e => {
+            favoritesProvider.handleExpand(e.element);
+        })
+    );
+
+    context.subscriptions.push(
+        treeView.onDidCollapseElement(e => {
+            favoritesProvider.handleCollapse(e.element);
+        })
+    );
+
     // Register all enhanced commands
     registerEnhancedCommands(context, favoritesProvider, storageService, treeView);
 

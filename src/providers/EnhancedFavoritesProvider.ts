@@ -20,6 +20,22 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
         this._onDidChangeTreeData.fire();
     }
 
+    handleExpand(element: TreeNode): void {
+        if ((element.type === 'group' || element.type === 'subgroup') && element.group) {
+            this.storageService.updateGroupExpansionState(element.group.id, true);
+        } else if (element.type === 'folder' && element.folder && element.groupId) {
+            this.storageService.updateFolderExpansionState(element.groupId, element.folder.id, true);
+        }
+    }
+
+    handleCollapse(element: TreeNode): void {
+        if ((element.type === 'group' || element.type === 'subgroup') && element.group) {
+            this.storageService.updateGroupExpansionState(element.group.id, false);
+        } else if (element.type === 'folder' && element.folder && element.groupId) {
+            this.storageService.updateFolderExpansionState(element.groupId, element.folder.id, false);
+        }
+    }
+
     getTreeItem(element: TreeNode): vscode.TreeItem {
         switch (element.type) {
             case 'group':

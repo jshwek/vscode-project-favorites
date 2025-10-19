@@ -160,6 +160,35 @@ export class StorageService {
         return true;
     }
 
+    updateGroupExpansionState(groupId: string, isExpanded: boolean): boolean {
+        const group = this.findGroupRecursive(groupId);
+        if (!group) {
+            return false;
+        }
+
+        group.isExpanded = isExpanded;
+        // Don't update updatedAt for expansion state changes
+        this.saveData();
+        return true;
+    }
+
+    updateFolderExpansionState(groupId: string, folderId: string, isExpanded: boolean): boolean {
+        const group = this.findGroupRecursive(groupId);
+        if (!group || !group.folders) {
+            return false;
+        }
+
+        const folder = group.folders.find(f => f.id === folderId);
+        if (!folder) {
+            return false;
+        }
+
+        folder.expanded = isExpanded;
+        // Don't update updatedAt for expansion state changes
+        this.saveData();
+        return true;
+    }
+
     deleteGroup(groupId: string): boolean {
         // Try to delete from top-level groups first
         const groupIndex = this.data.groups.findIndex(g => g.id === groupId);
