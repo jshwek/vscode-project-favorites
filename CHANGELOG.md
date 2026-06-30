@@ -4,7 +4,19 @@ All notable changes to the "Project Favorites" extension will be documented in t
 
 ## [1.0.0] - 2026-06-30
 
-First stable release. Focused on a data-loss fix in how favorites are persisted.
+First stable release. A data-loss fix in how favorites are persisted, plus a
+quality-of-life improvement to adding items.
+
+### Added
+
+- **Add without choosing a group when it's unambiguous.** "Add to Project Group"
+  (and the Add-current-file shortcut) no longer always prompts:
+  - With **no groups**, it offers to create one.
+  - With **exactly one group**, it adds straight to it.
+  - With **multiple groups**, it adds to the **last group you used** and shows a
+    confirmation with a **"Change…"** action to move it elsewhere in one click.
+  The last-used group is stored in `.vscode/project-favorites.json`, so the
+  default **syncs across machines** like the rest of your favorites.
 
 ### Fixed
 

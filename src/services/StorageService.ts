@@ -109,7 +109,13 @@ export class StorageService {
                     // Atomic write: write to a temp file, then rename over the
                     // target so a crash mid-write can't leave a truncated/corrupt
                     // JSON file. rename is atomic on the same filesystem.
-                    const tmpPath = filePath + '.tmp';
+                    //
+                    // The temp name is unique per process (pid) so that when the
+                    // same project is open in multiple windows, two windows saving
+                    // at once (e.g. each cleaning up after a deleted favorited
+                    // file) can never write the same temp file and publish a
+                    // corrupt mix. Each window owns its own scratch file.
+                    const tmpPath = `${filePath}.${process.pid}.tmp`;
                     fs.writeFileSync(tmpPath, JSON.stringify(this.data, null, 2), 'utf-8');
                     fs.renameSync(tmpPath, filePath);
                 } catch (error) {
@@ -126,6 +132,12 @@ export class StorageService {
     // Group management methods
     getAllGroups(): ProjectGroup[] {
         return this.data.groups;
+    }
+
+    // The group most recently added to. Used to add new items without prompting
+    // for a group. Persisted in the storage file so it syncs across machines.
+    getLastUsedGroupId(): string | undefined {
+        return this.data.lastUsedGroupId;
     }
 
 
@@ -234,6 +246,10 @@ export class StorageService {
 
     deleteGroup(groupId: string): boolean {
         this.reloadFromDisk();
+        // Clear the "last used" pointer if it referenced the group being removed.
+        if (this.data.lastUsedGroupId === groupId) {
+            this.data.lastUsedGroupId = undefined;
+        }
         // Try to delete from top-level groups first
         const groupIndex = this.data.groups.findIndex(g => g.id === groupId);
         if (groupIndex !== -1) {
@@ -292,6 +308,7 @@ export class StorageService {
 
         group.files.push(newFile);
         group.updatedAt = Date.now();
+        this.data.lastUsedGroupId = group.id;
         this.saveData();
         return true;
     }
@@ -381,6 +398,7 @@ export class StorageService {
 
         group.folders.push(newFolder);
         group.updatedAt = Date.now();
+        this.data.lastUsedGroupId = group.id;
         this.saveData();
         return true;
     }
@@ -501,6 +519,13 @@ export class StorageService {
         }
 
         targetItems.push(item);
+
+        // Moving a file/folder into a group makes that group the "last used"
+        // target, keeping the add-without-choosing default in sync with where
+        // items most recently landed (a subgroup reorg shouldn't hijack it).
+        if (itemType === 'file' || itemType === 'folder') {
+            this.data.lastUsedGroupId = targetGroupId;
+        }
 
         sourceGroup.updatedAt = Date.now();
         targetGroup.updatedAt = Date.now();

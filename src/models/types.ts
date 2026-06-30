@@ -36,6 +36,8 @@ export interface ProjectGroup {
 export interface FavoritesData {
     version: string;
     groups: ProjectGroup[];
+    lastUsedGroupId?: string;  // Group most recently added to; persisted/synced so
+                               // the "add without choosing" default carries across machines
 }
 
 export enum SortOrder {

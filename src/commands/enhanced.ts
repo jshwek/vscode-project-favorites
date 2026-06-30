@@ -72,18 +72,20 @@ export function registerEnhancedCommands(
                 return;
             }
 
-            const selected = await selectGroup(groups, 'Select a group to add the folder to');
-            if (selected) {
-                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-                if (workspaceFolder) {
-                    const relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
-                    const success = storageService.addFolderToGroup(selected.id, relativePath);
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) return;
+            const relativePath = path.relative(workspaceFolder.uri.fsPath, uri.fsPath);
 
-                    if (success) {
-                        provider.refresh();
-                        vscode.window.showInformationMessage(`Added folder to group '${selected.name}'`);
-                    }
-                }
+            // Add without prompting when the target is unambiguous (single group,
+            // or a synced last-used group); otherwise fall back to the picker.
+            const target = resolveTargetGroup(storageService, groups, 'Select a group to add the folder to');
+            const selected = target instanceof Promise ? await target : target;
+            if (!selected) return;
+
+            const success = storageService.addFolderToGroup(selected.id, relativePath);
+            if (success) {
+                provider.refresh();
+                await confirmAddWithChangeOption(selected, relativePath, 'folder', storageService, provider);
             }
         }
     );
@@ -496,7 +498,7 @@ async function addFileToGroupWithPicker(
     storageService: StorageService,
     provider: EnhancedFavoritesProvider
 ): Promise<void> {
-    // Pull the latest groups off disk so the picker reflects groups
+    // Pull the latest groups off disk so any decision below reflects groups
     // added/removed in other windows, not a stale in-memory list.
     storageService.refreshFromDisk();
     const groups = storageService.getAllGroups();
@@ -511,18 +513,85 @@ async function addFileToGroupWithPicker(
         return;
     }
 
-    const selected = await selectGroup(groups, 'Select a group to add the file to');
-    if (selected) {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder) {
-            const relativePath = path.relative(workspaceFolder.uri.fsPath, fileUri.fsPath);
-            const success = storageService.addFileToGroup(selected.id, relativePath);
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    if (!workspaceFolder) return;
+    const relativePath = path.relative(workspaceFolder.uri.fsPath, fileUri.fsPath);
 
-            if (success) {
-                provider.refresh();
-                vscode.window.showInformationMessage(`Added to group '${selected.name}'`);
-            }
+    // Add without prompting when the target is unambiguous (single group, or a
+    // synced last-used group); otherwise fall back to the picker.
+    const target = resolveTargetGroup(storageService, groups, 'Select a group to add the file to');
+    const selected = target instanceof Promise ? await target : target;
+    if (!selected) return;
+
+    const success = storageService.addFileToGroup(selected.id, relativePath);
+    if (success) {
+        provider.refresh();
+        await confirmAddWithChangeOption(selected, relativePath, 'file', storageService, provider);
+    }
+}
+
+/**
+ * Decide which group to add to without forcing a choice when it's unambiguous:
+ * - exactly one group  -> that group
+ * - a still-existing last-used group -> that group (synced across machines)
+ * - otherwise -> open the picker (returns a Promise the caller awaits)
+ *
+ * Returns a group synchronously for the no-prompt cases, or a Promise<group|undefined>
+ * when the picker is shown (undefined if the user cancels).
+ */
+function resolveTargetGroup(
+    storageService: StorageService,
+    groups: any[],
+    placeHolder: string
+): any | Promise<any> {
+    if (groups.length === 1) {
+        return groups[0];
+    }
+
+    const lastUsedId = storageService.getLastUsedGroupId();
+    if (lastUsedId) {
+        const lastUsed = storageService.getGroup(lastUsedId);
+        if (lastUsed) {
+            return lastUsed;
         }
+    }
+
+    return selectGroup(groups, placeHolder);
+}
+
+/**
+ * After an auto-add, confirm where the item landed and offer a one-click
+ * "Change…" to move it to a different group (the escape hatch for when the
+ * last-used default wasn't what you wanted).
+ */
+async function confirmAddWithChangeOption(
+    targetGroup: any,
+    relativePath: string,
+    itemType: 'file' | 'folder',
+    storageService: StorageService,
+    provider: EnhancedFavoritesProvider
+): Promise<void> {
+    const choice = await vscode.window.showInformationMessage(
+        `Added to '${targetGroup.name}'.`,
+        'Change…'
+    );
+    if (choice !== 'Change…') return;
+
+    storageService.refreshFromDisk();
+    const groups = storageService.getAllGroups();
+    const chosen = await selectGroup(groups, `Move ${itemType} to which group?`);
+    if (!chosen || chosen.id === targetGroup.id) return;
+
+    // Look up the just-added item's id in the (current) source group, then move it.
+    const source = storageService.getGroup(targetGroup.id);
+    const items: any[] = (itemType === 'file' ? source?.files : source?.folders) || [];
+    const item = items.find((i: any) => i.relativePath === relativePath);
+    if (!item) return;
+
+    const moved = storageService.moveItemBetweenGroups(targetGroup.id, chosen.id, item.id, itemType);
+    if (moved) {
+        provider.refresh();
+        vscode.window.showInformationMessage(`Moved to '${chosen.name}'.`);
     }
 }
 
