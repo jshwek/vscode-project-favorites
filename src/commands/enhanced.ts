@@ -57,6 +57,9 @@ export function registerEnhancedCommands(
                 return;
             }
 
+            // Pull the latest groups off disk so the picker reflects groups
+            // added/removed in other windows, not a stale in-memory list.
+            storageService.refreshFromDisk();
             const groups = storageService.getAllGroups();
             if (groups.length === 0) {
                 const create = await vscode.window.showInformationMessage(
@@ -147,6 +150,11 @@ export function registerEnhancedCommands(
         'projectFavorites.renameGroup',
         async (node: TreeNode) => {
             if (!node.group) return;
+
+            // Refresh once before prompting so the duplicate-name check below
+            // validates against the current on-disk groups (cheaper than
+            // re-reading on every keystroke inside validateInput).
+            storageService.refreshFromDisk();
 
             const newName = await vscode.window.showInputBox({
                 prompt: 'Enter new group name',
@@ -365,10 +373,15 @@ export function registerEnhancedCommands(
         }
     );
 
-    // Refresh view
+    // Refresh view — pull the latest copy off disk first so the button reflects
+    // external changes (another window, a manual edit, a git checkout), not just
+    // re-render this window's stale in-memory state.
     const refresh = vscode.commands.registerCommand(
         'projectFavorites.refresh',
-        () => provider.refresh()
+        () => {
+            storageService.refreshFromDisk();
+            provider.refresh();
+        }
     );
 
     // Collapse all
@@ -391,6 +404,9 @@ export function registerEnhancedCommands(
                 return;
             }
 
+            // Compute the index against the current on-disk order so the move
+            // lands correctly even if another window reordered the groups.
+            storageService.refreshFromDisk();
             const groups = storageService.getAllGroups();
             const currentIndex = groups.findIndex(g => g.id === node.group!.id);
 
@@ -425,6 +441,9 @@ export function registerEnhancedCommands(
                 return;
             }
 
+            // Compute the index against the current on-disk order so the move
+            // lands correctly even if another window reordered the groups.
+            storageService.refreshFromDisk();
             const groups = storageService.getAllGroups();
             const currentIndex = groups.findIndex(g => g.id === node.group!.id);
 
@@ -477,6 +496,9 @@ async function addFileToGroupWithPicker(
     storageService: StorageService,
     provider: EnhancedFavoritesProvider
 ): Promise<void> {
+    // Pull the latest groups off disk so the picker reflects groups
+    // added/removed in other windows, not a stale in-memory list.
+    storageService.refreshFromDisk();
     const groups = storageService.getAllGroups();
     if (groups.length === 0) {
         const create = await vscode.window.showInformationMessage(

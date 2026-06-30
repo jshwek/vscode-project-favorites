@@ -66,6 +66,22 @@ export function activate(context: vscode.ExtensionContext) {
         })
     );
 
+    // Watch the on-disk storage file so external changes — another VS Code
+    // window, a manual edit, or a git checkout — refresh this window's in-memory
+    // data and tree view instead of silently diverging. (Our own atomic saves
+    // also fire this; reloading the just-written data is a harmless no-op.)
+    const storageWatcher = storageService.createStorageWatcher();
+    if (storageWatcher) {
+        const onExternalChange = () => {
+            storageService.refreshFromDisk();
+            favoritesProvider.refresh();
+        };
+        storageWatcher.onDidChange(onExternalChange);
+        storageWatcher.onDidCreate(onExternalChange);
+        storageWatcher.onDidDelete(onExternalChange);
+        context.subscriptions.push(storageWatcher);
+    }
+
     context.subscriptions.push(treeView);
 }
 

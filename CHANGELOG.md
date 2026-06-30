@@ -2,6 +2,29 @@
 
 All notable changes to the "Project Favorites" extension will be documented in this file.
 
+## [1.0.0] - 2026-06-30
+
+First stable release. Focused on a data-loss fix in how favorites are persisted.
+
+### Fixed
+
+- **Critical: favorites no longer get silently wiped.** The storage layer read the
+  `.vscode/project-favorites.json` file once at startup and every save overwrote the
+  whole file from that in-memory snapshot. A second VS Code window (or any window left
+  open while changes were made elsewhere) held a stale snapshot, so its next save —
+  even just expanding/collapsing a group — clobbered everything added in the meantime.
+  All mutations now reload the file from disk immediately before changing and saving it
+  (read-modify-write), so a stale window can no longer overwrite newer data.
+- **Atomic writes.** Saves now write to a temp file and rename into place, so a crash
+  mid-write can't leave a truncated/corrupt JSON file.
+- **Refresh button now reloads from disk** instead of only re-rendering the in-memory
+  state, so it reflects changes made by other windows, manual edits, or `git` operations.
+- **External-change detection.** A file watcher refreshes the view automatically when
+  `.vscode/project-favorites.json` changes on disk.
+- **Stale-read hardening.** Export, the add-to-group pickers, group rename's
+  duplicate-name check, and reorder (buttons + drag-and-drop) all reload from disk before
+  reading, so they act on current data rather than a stale snapshot.
+
 ## [0.0.1] - 2025-01-XX
 
 ### Initial Release

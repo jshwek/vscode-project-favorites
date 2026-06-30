@@ -357,6 +357,11 @@ export class EnhancedFavoritesProvider implements vscode.TreeDataProvider<TreeNo
 
         const draggedItem = dragData[0];
 
+        // Pull the latest state off disk before computing indices / looking up
+        // groups, so a concurrent change in another window can't make the drop
+        // land on the wrong index or a since-deleted group.
+        this.storageService.refreshFromDisk();
+
         // Case 1: Dropping onto a file or folder in the same group - reorder within group
         if ((target?.type === 'file' || target?.type === 'folder') && target.groupId === draggedItem.groupId) {
             // Only allow reordering within the same type (file-to-file, folder-to-folder)

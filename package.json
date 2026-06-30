@@ -2,7 +2,7 @@
   "name": "project-favorites",
   "displayName": "Project Favorites",
   "description": "Organize and manage groups of related files across your project for better workflow",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "publisher": "jshwek",
   "icon": "logo-128.png",
   "license": "MIT",

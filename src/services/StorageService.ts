@@ -9,7 +9,9 @@ export class StorageService {
     private data: FavoritesData;
 
     constructor(private context: vscode.ExtensionContext) {
-        this.data = this.loadData();
+        // Start from an empty default, then pull the authoritative copy off disk.
+        this.data = { version: '1.0.0', groups: [] };
+        this.reloadFromDisk();
     }
 
     private getStorageLocation(): StorageLocation {
@@ -37,7 +39,17 @@ export class StorageService {
         return undefined; // Will use global storage
     }
 
-    private loadData(): FavoritesData {
+    /**
+     * Re-read the authoritative copy from disk (workspace mode) or global state
+     * into `this.data`. This is the core of the read-modify-write discipline:
+     * every mutation calls this FIRST so it operates on the freshest state, which
+     * prevents a stale in-memory snapshot (e.g. from a second VS Code window left
+     * open) from clobbering changes another window already wrote.
+     *
+     * On any read/parse failure the existing in-memory copy is kept intact — we
+     * never wipe good in-memory data because of a transient read error.
+     */
+    private reloadFromDisk(): void {
         const storageLocation = this.getStorageLocation();
 
         if (storageLocation === StorageLocation.Workspace) {
@@ -45,24 +57,46 @@ export class StorageService {
             if (filePath && fs.existsSync(filePath)) {
                 try {
                     const content = fs.readFileSync(filePath, 'utf-8');
-                    return JSON.parse(content);
+                    const parsed = JSON.parse(content) as FavoritesData;
+                    // Only adopt the disk copy if it is structurally valid.
+                    if (parsed && Array.isArray(parsed.groups)) {
+                        this.data = parsed;
+                    }
                 } catch (error) {
-                    console.error('Error loading workspace storage:', error);
+                    console.error('Error reloading workspace storage (keeping in-memory copy):', error);
                 }
             }
         } else {
-            // Load from global storage
             const data = this.context.globalState.get<FavoritesData>(StorageService.STORAGE_KEY);
-            if (data) {
-                return data;
+            if (data && Array.isArray(data.groups)) {
+                this.data = data;
             }
         }
+    }
 
-        // Return default empty data
-        return {
-            version: '1.0.0',
-            groups: []
-        };
+    /**
+     * Public hook for the file watcher: pull external changes (made by another
+     * window) into memory so the tree view can re-render the current state.
+     */
+    refreshFromDisk(): void {
+        this.reloadFromDisk();
+    }
+
+    /**
+     * Create a watcher for the on-disk storage file so external edits (another
+     * window, manual edit, git checkout) can refresh this instance. Returns
+     * undefined in global-storage mode (no file to watch).
+     */
+    createStorageWatcher(): vscode.FileSystemWatcher | undefined {
+        if (this.getStorageLocation() !== StorageLocation.Workspace) {
+            return undefined;
+        }
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+            return undefined;
+        }
+        const pattern = new vscode.RelativePattern(workspaceFolder, '.vscode/' + StorageService.STORAGE_FILE);
+        return vscode.workspace.createFileSystemWatcher(pattern);
     }
 
     private saveData(): void {
@@ -72,7 +106,12 @@ export class StorageService {
             const filePath = this.getStorageFilePath();
             if (filePath) {
                 try {
-                    fs.writeFileSync(filePath, JSON.stringify(this.data, null, 2), 'utf-8');
+                    // Atomic write: write to a temp file, then rename over the
+                    // target so a crash mid-write can't leave a truncated/corrupt
+                    // JSON file. rename is atomic on the same filesystem.
+                    const tmpPath = filePath + '.tmp';
+                    fs.writeFileSync(tmpPath, JSON.stringify(this.data, null, 2), 'utf-8');
+                    fs.renameSync(tmpPath, filePath);
                 } catch (error) {
                     console.error('Error saving workspace storage:', error);
                     vscode.window.showErrorMessage('Failed to save project favorites to workspace');
@@ -91,6 +130,7 @@ export class StorageService {
 
 
     createGroup(name: string, description?: string, parentId?: string): ProjectGroup {
+        this.reloadFromDisk();
         const newGroup: ProjectGroup = {
             id: uuidv4(),
             name,
@@ -147,6 +187,7 @@ export class StorageService {
     }
 
     updateGroup(groupId: string, updates: Partial<ProjectGroup>): boolean {
+        this.reloadFromDisk();
         const group = this.findGroupRecursive(groupId);
         if (!group) {
             return false;
@@ -161,6 +202,7 @@ export class StorageService {
     }
 
     updateGroupExpansionState(groupId: string, isExpanded: boolean): boolean {
+        this.reloadFromDisk();
         const group = this.findGroupRecursive(groupId);
         if (!group) {
             return false;
@@ -173,6 +215,7 @@ export class StorageService {
     }
 
     updateFolderExpansionState(groupId: string, folderId: string, isExpanded: boolean): boolean {
+        this.reloadFromDisk();
         const group = this.findGroupRecursive(groupId);
         if (!group || !group.folders) {
             return false;
@@ -190,6 +233,7 @@ export class StorageService {
     }
 
     deleteGroup(groupId: string): boolean {
+        this.reloadFromDisk();
         // Try to delete from top-level groups first
         const groupIndex = this.data.groups.findIndex(g => g.id === groupId);
         if (groupIndex !== -1) {
@@ -226,6 +270,7 @@ export class StorageService {
 
     // File management methods
     addFileToGroup(groupId: string, relativePath: string, label?: string): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group) {
             return false;
@@ -252,6 +297,7 @@ export class StorageService {
     }
 
     updateFileLineNumber(groupId: string, fileId: string, lineNumber: number): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group) {
             return false;
@@ -269,6 +315,7 @@ export class StorageService {
     }
 
     removeFileFromGroup(groupId: string, fileId: string): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group) {
             return false;
@@ -286,6 +333,7 @@ export class StorageService {
     }
 
     removeFileFromAllGroups(absolutePath: string): void {
+        this.reloadFromDisk();
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             return;
@@ -306,6 +354,7 @@ export class StorageService {
 
     // Folder management methods
     addFolderToGroup(groupId: string, relativePath: string, label?: string): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group) {
             return false;
@@ -337,6 +386,7 @@ export class StorageService {
     }
 
     removeFolderFromGroup(groupId: string, folderId: string): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group || !group.folders) {
             return false;
@@ -355,6 +405,7 @@ export class StorageService {
 
     // Drag and drop support - reorder items
     reorderItems(groupId: string, itemId: string, newIndex: number, itemType: 'file' | 'folder' | 'subgroup'): boolean {
+        this.reloadFromDisk();
         const group = this.getGroup(groupId);
         if (!group) {
             return false;
@@ -389,6 +440,7 @@ export class StorageService {
 
     // Reorder top-level groups
     reorderGroups(groupId: string, newIndex: number): boolean {
+        this.reloadFromDisk();
         const oldIndex = this.data.groups.findIndex(g => g.id === groupId);
         if (oldIndex === -1 || oldIndex === newIndex) {
             return false;
@@ -413,6 +465,7 @@ export class StorageService {
         itemId: string,
         itemType: 'file' | 'folder' | 'subgroup'
     ): boolean {
+        this.reloadFromDisk();
         const sourceGroup = this.getGroup(sourceGroupId);
         const targetGroup = this.getGroup(targetGroupId);
 
@@ -457,6 +510,9 @@ export class StorageService {
 
     // Utility methods
     exportData(): string {
+        // Export is a "give me a correct backup" operation — guarantee it
+        // reflects the on-disk truth, not a possibly-stale in-memory snapshot.
+        this.reloadFromDisk();
         return JSON.stringify(this.data, null, 2);
     }
 
@@ -476,6 +532,9 @@ export class StorageService {
             );
 
             action.then(selected => {
+                // Reload right before mutating: the user may have taken a while at
+                // the prompt, during which another window could have written.
+                this.reloadFromDisk();
                 if (selected === 'Replace existing groups') {
                     this.data = importedData;
                 } else if (selected === 'Merge with existing groups') {
